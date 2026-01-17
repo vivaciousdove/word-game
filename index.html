@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Word Guess Game</title>
+  <meta name="description" content="A simple browser word guessing game." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Word Guess Game</h1>
+      <p class="sub">Guess the 5-letter word in 6 tries.</p>
+    </header>
+
+    <section class="panel">
+      <div class="row">
+        <button id="newGameBtn" class="btn">New Game</button>
+        <button id="hintBtn" class="btn btn-ghost">Hint</button>
+      </div>
+
+      <div class="stats" aria-live="polite">
+        <span id="attempts">Attempt: 1 / 6</span>
+        <span id="hint" class="hint"></span>
+      </div>
+    </section>
+
+    <section class="board" id="board" aria-label="Game board"></section>
+
+    <section class="controls">
+      <form id="guessForm" class="guess-form">
+        <label class="sr-only" for="guessInput">Your guess</label>
+        <input
+          id="guessInput"
+          name="guess"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          maxlength="5"
+          placeholder="Enter 5 letters"
+          aria-label="Enter a 5-letter guess"
+        />
+        <button class="btn" type="submit">Guess</button>
+      </form>
+
+      <p id="message" class="message" aria-live="polite"></p>
+      <details class="rules">
+        <summary>Rules</summary>
+        <ul>
+          <li><span class="chip chip-green"></span> Green = right letter, right spot</li>
+          <li><span class="chip chip-yellow"></span> Yellow = right letter, wrong spot</li>
+          <li><span class="chip chip-gray"></span> Gray = letter not in word</li>
+        </ul>
+      </details>
+    </section>
+
+    <footer class="footer">
+      <small>Built with HTML/CSS/JS — host it free on Netlify.</small>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

@@ -17,12 +17,17 @@ const dailyBtn = document.getElementById("dailyBtn");
 const hintBtn = document.getElementById("hintBtn");
 const streakEl = document.getElementById("streak");
 const bestStreakEl = document.getElementById("bestStreak");
+const keyboardEl = document.getElementById("keyboard");
 
 let answer = "";
 let attempt = 0;
 let gameOver = false;
 let hintUsed = false;
 
+const keyState = {}; // letter -> "gray" | "yellow" | "green"
+const rank = { gray: 1, yellow: 2, green: 3 };
+
+// ----- storage helpers -----
 function getNum(key, fallback = 0) {
   const v = Number(localStorage.getItem(key));
   return Number.isFinite(v) ? v : fallback;
@@ -38,6 +43,7 @@ function setStr(key, val) {
   localStorage.setItem(key, String(val));
 }
 
+// ----- streak logic -----
 function renderStreak() {
   streakEl.textContent = `Streak: ${getNum("streak")}`;
   bestStreakEl.textContent = `Best: ${getNum("bestStreak")}`;
@@ -53,12 +59,11 @@ function resetStreak() {
   renderStreak();
 }
 
-// ---- Daily mode helpers (UTC date) ----
+// ----- daily word helpers -----
 function todayKeyUTC() {
-  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return new Date().toISOString().slice(0, 10);
 }
 function hashToIndex(str, mod) {
-  // fast deterministic hash (32-bit)
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i);
@@ -68,8 +73,7 @@ function hashToIndex(str, mod) {
 }
 function pickDailyWord() {
   const key = todayKeyUTC();
-  const idx = hashToIndex(`daily:${key}`, WORDS.length);
-  return WORDS[idx];
+  return WORDS[hashToIndex(`daily:${key}`, WORDS.length)];
 }
 function isDailyMode() {
   return getStr("mode", "random") === "daily";
@@ -82,17 +86,13 @@ function renderMode() {
   dailyBtn.textContent = `Daily: ${isDailyMode() ? "On" : "Off"}`;
 }
 
-function pickRandomWord() {
-  return WORDS[Math.floor(Math.random() * WORDS.length)];
-}
-
+// ----- board -----
 function buildBoard() {
   boardEl.innerHTML = "";
   for (let r = 0; r < MAX_TRIES; r++) {
     const row = document.createElement("div");
     row.className = "board-row";
     row.dataset.row = String(r);
-
     for (let c = 0; c < WORD_LEN; c++) {
       const tile = document.createElement("div");
       tile.className = "tile";
@@ -103,25 +103,28 @@ function buildBoard() {
   }
 }
 
+function updateAttempts() {
+  attemptsEl.textContent = `Attempt: ${Math.min(attempt + 1, MAX_TRIES)} / ${MAX_TRIES}`;
+}
+
 function scoreGuess(guess, target) {
   const res = Array(WORD_LEN).fill("gray");
-  const targetArr = target.split("");
-  const guessArr = guess.split("");
+  const t = target.split("");
+  const g = guess.split("");
 
   for (let i = 0; i < WORD_LEN; i++) {
-    if (guessArr[i] === targetArr[i]) {
+    if (g[i] === t[i]) {
       res[i] = "green";
-      targetArr[i] = null;
-      guessArr[i] = null;
+      t[i] = null;
+      g[i] = null;
     }
   }
-
   for (let i = 0; i < WORD_LEN; i++) {
-    if (guessArr[i] == null) continue;
-    const idx = targetArr.indexOf(guessArr[i]);
+    if (g[i] == null) continue;
+    const idx = t.indexOf(g[i]);
     if (idx !== -1) {
       res[i] = "yellow";
-      targetArr[idx] = null;
+      t[idx] = null;
     }
   }
   return res;
@@ -129,18 +132,101 @@ function scoreGuess(guess, target) {
 
 function renderRow(rowIndex, guess, colors) {
   const row = boardEl.querySelector(`.board-row[data-row="${rowIndex}"]`);
-  if (!row) return;
   const tiles = Array.from(row.children);
-
   for (let i = 0; i < WORD_LEN; i++) {
-    tiles[i].textContent = guess[i].toUpperCase();
+    tiles[i].textContent = (guess[i] || "").toUpperCase();
     tiles[i].classList.remove("green", "yellow", "gray");
-    tiles[i].classList.add(colors[i]);
+    if (guess[i]) tiles[i].classList.add(colors[i]);
   }
 }
 
-function updateAttempts() {
-  attemptsEl.textContent = `Attempt: ${Math.min(attempt + 1, MAX_TRIES)} / ${MAX_TRIES}`;
+function bumpKey(letter, color) {
+  const L = letter.toLowerCase();
+  const prev = keyState[L];
+  if (!prev || rank[color] > rank[prev]) keyState[L] = color;
+}
+
+function renderKeyboardColors() {
+  keyboardEl.querySelectorAll(".key[data-key]").forEach(btn => {
+    const k = btn.dataset.key;
+    btn.classList.remove("green", "yellow", "gray");
+    const s = keyState[k];
+    if (s) btn.classList.add(s);
+  });
+}
+
+// ----- keyboard -----
+const KEY_LAYOUT = [
+  ["q","w","e","r","t","y","u","i","o","p"],
+  ["a","s","d","f","g","h","j","k","l"],
+  ["enter","z","x","c","v","b","n","m","back"]
+];
+
+function buildKeyboard() {
+  keyboardEl.innerHTML = "";
+  KEY_LAYOUT.forEach(row => {
+    const rowEl = document.createElement("div");
+    rowEl.className = "krow";
+    row.forEach(k => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "key";
+      if (k === "enter" || k === "back") btn.classList.add("wide");
+      btn.textContent = k === "back" ? "⌫" : k;
+      if (k === "enter") btn.textContent = "Enter";
+      btn.dataset.key = k.length === 1 ? k : "";
+      btn.dataset.action = k; // enter/back or letter
+      rowEl.appendChild(btn);
+    });
+    keyboardEl.appendChild(rowEl);
+  });
+
+  keyboardEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button.key");
+    if (!btn || gameOver) return;
+    const action = btn.dataset.action;
+
+    if (action === "enter") {
+      formEl.requestSubmit();
+      return;
+    }
+    if (action === "back") {
+      inputEl.value = inputEl.value.slice(0, -1);
+      inputEl.focus();
+      return;
+    }
+    if (action.length === 1) {
+      if (inputEl.value.length < WORD_LEN) {
+        inputEl.value += action;
+        inputEl.focus();
+      }
+    }
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (gameOver) return;
+
+  const k = e.key.toLowerCase();
+  if (k === "enter") {
+    e.preventDefault();
+    formEl.requestSubmit();
+    return;
+  }
+  if (k === "backspace") {
+    return; // native input handling
+  }
+  if (/^[a-z]$/.test(k)) {
+    // let the input handle it, but enforce max len quickly
+    setTimeout(() => {
+      inputEl.value = (inputEl.value || "").slice(0, WORD_LEN);
+    }, 0);
+  }
+});
+
+// ----- hints + game loop -----
+function pickRandomWord() {
+  return WORDS[Math.floor(Math.random() * WORDS.length)];
 }
 
 function newGame() {
@@ -155,23 +241,22 @@ function newGame() {
   renderStreak();
   renderMode();
 
-  if (isDailyMode()) {
-    msgEl.textContent = `Daily word loaded (${todayKeyUTC()} UTC).`;
-  } else {
-    msgEl.textContent = "Game on. Enter a 5-letter word.";
-  }
+  Object.keys(keyState).forEach(k => delete keyState[k]);
+  renderKeyboardColors();
+
+  msgEl.textContent = isDailyMode()
+    ? `Daily word loaded for ${todayKeyUTC()} UTC`
+    : "Game on. Enter a 5-letter word.";
 
   inputEl.value = "";
   inputEl.focus();
 }
 
 function giveHint() {
-  if (gameOver) return;
-  if (hintUsed) return;
-
+  if (gameOver || hintUsed) return;
   hintUsed = true;
-  const revealIndex = Math.floor(Math.random() * WORD_LEN);
-  hintEl.textContent = `Hint: letter ${revealIndex + 1} is "${answer[revealIndex].toUpperCase()}"`;
+  const i = Math.floor(Math.random() * WORD_LEN);
+  hintEl.textContent = `Hint: letter ${i + 1} is "${answer[i].toUpperCase()}"`;
 }
 
 formEl.addEventListener("submit", (e) => {
@@ -190,6 +275,12 @@ formEl.addEventListener("submit", (e) => {
 
   const colors = scoreGuess(guess, answer);
   renderRow(attempt, guess, colors);
+
+  // update keyboard state
+  for (let i = 0; i < WORD_LEN; i++) {
+    bumpKey(guess[i], colors[i]);
+  }
+  renderKeyboardColors();
 
   if (guess === answer) {
     gameOver = true;
@@ -215,12 +306,12 @@ formEl.addEventListener("submit", (e) => {
 
 newGameBtn.addEventListener("click", newGame);
 hintBtn.addEventListener("click", giveHint);
-
 dailyBtn.addEventListener("click", () => {
   setDailyMode(!isDailyMode());
   newGame();
 });
 
 // init
+buildKeyboard();
 renderMode();
 newGame();

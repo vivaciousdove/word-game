@@ -1,183 +1,60 @@
-:root {
-  --bg: #0b1020;
-  --card: #121a33;
-  --text: #eaf0ff;
-  --muted: #a9b4d0;
-  --border: #243156;
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Word Guess Game</title>
+  <meta name="description" content="A simple browser word guessing game." />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Word Guess Game</h1>
+      <p class="sub">Guess the 5-letter word in 6 tries.</p>
+    </header>
 
-  --green: #22c55e;
-  --yellow: #eab308;
-  --gray: #475569;
+    <section class="panel">
+      <div class="row">
+        <button id="newGameBtn" class="btn">New Game</button>
+        <button id="dailyBtn" class="btn btn-ghost">Daily: Off</button>
+        <button id="hintBtn" class="btn btn-ghost">Hint</button>
+      </div>
 
-  --shadow: 0 10px 30px rgba(0,0,0,0.35);
-}
+      <div class="stats" aria-live="polite">
+        <span id="attempts">Attempt: 1 / 6</span>
+        <span id="streak">Streak: 0</span>
+        <span id="bestStreak">Best: 0</span>
+        <span id="hint" class="hint"></span>
+      </div>
+    </section>
 
-* { box-sizing: border-box; }
+    <section class="board" id="board" aria-label="Game board"></section>
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: radial-gradient(1200px 800px at 20% 10%, #1b2a66 0%, var(--bg) 60%);
-  color: var(--text);
-}
+    <section class="controls">
+      <form id="guessForm" class="guess-form">
+        <label class="sr-only" for="guessInput">Your guess</label>
+        <input
+          id="guessInput"
+          name="guess"
+          type="text"
+          maxlength="5"
+          placeholder="Enter 5 letters"
+          aria-label="Enter a 5-letter guess"
+        />
+        <button class="btn" type="submit">Guess</button>
+      </form>
 
-.container {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 28px 16px 40px;
-}
+      <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
 
-.header h1 {
-  margin: 0;
-  font-size: 32px;
-  letter-spacing: 0.5px;
-}
-.sub {
-  margin: 8px 0 0;
-  color: var(--muted);
-}
+      <p id="message" class="message" aria-live="polite"></p>
+    </section>
 
-.panel {
-  margin-top: 18px;
-  padding: 14px;
-  background: rgba(18,26,51,0.7);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-}
+    <footer class="footer">
+      <small>Hosted free on Netlify.</small>
+    </footer>
+  </main>
 
-.row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.stats {
-  margin-top: 10px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  color: var(--muted);
-}
-
-.hint { color: #c7d2fe; }
-
-.btn {
-  appearance: none;
-  border: 1px solid transparent;
-  background: #3b82f6;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 700;
-  transition: transform .05s ease, filter .15s ease;
-}
-.btn:hover { filter: brightness(1.05); }
-.btn:active { transform: translateY(1px); }
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.board {
-  margin-top: 18px;
-  display: grid;
-  grid-template-rows: repeat(6, 1fr);
-  gap: 10px;
-}
-
-.board-row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-}
-
-.tile {
-  height: 62px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(18,26,51,0.65);
-  display: grid;
-  place-items: center;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-}
-
-.tile.green { background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.7); }
-.tile.yellow { background: rgba(234,179,8,0.25); border-color: rgba(234,179,8,0.7); }
-.tile.gray { background: rgba(71,85,105,0.25); border-color: rgba(71,85,105,0.9); }
-
-.controls {
-  margin-top: 18px;
-  padding: 14px;
-  background: rgba(18,26,51,0.55);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-}
-
-.guess-form {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-#guessInput {
-  flex: 1;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(11,16,32,0.6);
-  color: var(--text);
-  font-size: 16px;
-  outline: none;
-}
-#guessInput:focus { border-color: #5b7cfa; }
-
-.message {
-  margin: 12px 0 0;
-  min-height: 22px;
-  color: var(--muted);
-}
-
-.rules {
-  margin-top: 12px;
-  color: var(--muted);
-}
-.rules summary { cursor: pointer; }
-
-.chip {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  margin-right: 8px;
-  vertical-align: -2px;
-}
-.chip-green { background: var(--green); }
-.chip-yellow { background: var(--yellow); }
-.chip-gray { background: var(--gray); }
-
-.footer {
-  margin-top: 18px;
-  color: var(--muted);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
-}
+  <script src="./app.js"></script>
+</body>
+</html>

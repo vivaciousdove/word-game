@@ -17,13 +17,15 @@
     <section class="panel">
       <div class="row">
         <button id="newGameBtn" class="btn">New Game</button>
+        <button id="dailyBtn" class="btn btn-ghost">Daily: Off</button>
         <button id="hintBtn" class="btn btn-ghost">Hint</button>
       </div>
 
-      <div class="row">
-        <button id="newGameBtn" class="btn">New Game</button>
-        <button id="dailyBtn" class="btn btn-ghost">Daily: Off</button>
-        <button id="hintBtn" class="btn btn-ghost">Hint</button>
+      <div class="stats" aria-live="polite">
+        <span id="attempts">Attempt: 1 / 6</span>
+        <span id="streak">Streak: 0</span>
+        <span id="bestStreak">Best: 0</span>
+        <span id="hint" class="hint"></span>
       </div>
     </section>
 
@@ -36,8 +38,6 @@
           id="guessInput"
           name="guess"
           type="text"
-          inputmode="text"
-          autocomplete="off"
           maxlength="5"
           placeholder="Enter 5 letters"
           aria-label="Enter a 5-letter guess"

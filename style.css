@@ -1,60 +1,137 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Word Guess Game</title>
-  <meta name="description" content="A simple browser word guessing game." />
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <main class="container">
-    <header class="header">
-      <h1>Word Guess Game</h1>
-      <p class="sub">Guess the 5-letter word in 6 tries.</p>
-    </header>
+:root{
+  --bg:#0b1020;
+  --text:#eaf0ff;
+  --muted:#a9b4d0;
+  --border:#243156;
+  --green:#22c55e;
+  --yellow:#eab308;
+  --gray:#475569;
+}
 
-    <section class="panel">
-      <div class="row">
-        <button id="newGameBtn" class="btn">New Game</button>
-        <button id="dailyBtn" class="btn btn-ghost">Daily: Off</button>
-        <button id="hintBtn" class="btn btn-ghost">Hint</button>
-      </div>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
 
-      <div class="stats" aria-live="polite">
-        <span id="attempts">Attempt: 1 / 6</span>
-        <span id="streak">Streak: 0</span>
-        <span id="bestStreak">Best: 0</span>
-        <span id="hint" class="hint"></span>
-      </div>
-    </section>
+.container{
+  max-width:720px;
+  margin:auto;
+  padding:20px;
+}
 
-    <section class="board" id="board" aria-label="Game board"></section>
+.header h1{margin:0;}
+.sub{color:var(--muted);}
 
-    <section class="controls">
-      <form id="guessForm" class="guess-form">
-        <label class="sr-only" for="guessInput">Your guess</label>
-        <input
-          id="guessInput"
-          name="guess"
-          type="text"
-          maxlength="5"
-          placeholder="Enter 5 letters"
-          aria-label="Enter a 5-letter guess"
-        />
-        <button class="btn" type="submit">Guess</button>
-      </form>
+.panel{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-top:10px;
+}
 
-      <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
+.row{display:flex; gap:10px; flex-wrap:wrap;}
+.stats{margin-top:8px; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap;}
 
-      <p id="message" class="message" aria-live="polite"></p>
-    </section>
+.board{
+  margin-top:15px;
+  display:grid;
+  grid-template-rows:repeat(6,1fr);
+  gap:6px;
+}
 
-    <footer class="footer">
-      <small>Hosted free on Netlify.</small>
-    </footer>
-  </main>
+.board-row{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
 
-  <script src="./app.js"></script>
-</body>
-</html>
+.tile{
+  border:1px solid var(--border);
+  border-radius:8px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  font-weight:800;
+  text-transform:uppercase;
+  background:#101836;
+}
+
+.tile.green{background:rgba(34,197,94,.35); border-color:rgba(34,197,94,.8);}
+.tile.yellow{background:rgba(234,179,8,.35); border-color:rgba(234,179,8,.8);}
+.tile.gray{background:rgba(71,85,105,.35); border-color:rgba(71,85,105,.9);}
+
+.controls{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.guess-form{
+  display:flex;
+  gap:10px;
+  margin-top:6px;
+}
+
+input{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#000;
+  color:var(--text);
+}
+
+.btn{
+  background:#3b82f6;
+  color:#fff;
+  border:none;
+  padding:10px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--border);
+}
+
+.keyboard{
+  margin-top:12px;
+  display:grid;
+  gap:8px;
+}
+
+.krow{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.key{
+  min-width:34px;
+  padding:10px 10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#121a33;
+  color:var(--text);
+  font-weight:800;
+  cursor:pointer;
+  user-select:none;
+  text-transform:uppercase;
+}
+
+.key.wide{min-width:72px;}
+.key.green{background:rgba(34,197,94,.35); border-color:rgba(34,197,94,.8);}
+.key.yellow{background:rgba(234,179,8,.35); border-color:rgba(234,179,8,.8);}
+.key.gray{background:rgba(71,85,105,.35); border-color:rgba(71,85,105,.9);}
+
+.message{margin-top:10px; min-height:22px; color:var(--muted);}
+.footer{margin-top:18px; color:var(--muted);}
+
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
